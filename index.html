@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chomsky — Grammatical Passphrase Generator</title>
+  <meta name="description" content="Generate strong, memorable passphrases using real-ish English grammar. No dependencies, no build step — just open in your browser." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=DM+Sans:ital,wght@0,400;0,500;1,400&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+
+    <!-- Header -->
+    <header>
+      <h1>&#x1f510; Chomsky - A Grammatical Passphrase Generator &#x1f510;</h1>
+      <p><i><a href="#colorless">Colorless green ideas sleep furiously</a></i></p>
+    </header>
+
+    <!-- Output Card -->
+    <div class="card">
+      <div class="card-header">
+        <h2>Your Passphrase</h2>
+        <button class="btn btn-secondary" id="copy-btn" disabled>Copy</button>
+      </div>
+      <div id="passphrase-output" class="placeholder">Click &ldquo;Generate&rdquo; to create a passphrase</div>
+      <div class="note">Passphrase length: <span id="passphrase-current-length" class="note-value"></span> characters (minimum <span id="passphrase-min-length" class="note-value"></span>, maximum <span id="passphrase-max-length" class="note-value"></span>)</div>
+      <div class="note">Passphrase strength: &ge; <span id="passphrase-strength" class="note-value"></span> bits (<span id="passphrase-count" class="note-value"></span> possible combinations)</div>
+      <button class="btn btn-primary" id="generate-btn">Generate Another Passphrase</button>
+    </div>
+
+    <!-- Settings Card -->
+    <div class="card">
+      <div id="controls-header" class="controls-header">
+        <h2>Settings</h2>
+        <button class="btn btn-secondary" id="controls-toggle">Show &#x25BE;</button>
+      </div>
+      <div class="controls-body collapsed" id="controls-body">
+        <div class="controls-body-inner">
+          <div class="controls">
+            <div class="control-group">
+              <label for="word-count">Number of words</label>
+              <input type="number" id="word-count" min="3" max="6" value="5" />
+            </div>
+            <div class="control-group">
+              <label for="separator">Separator</label>
+              <input type="text" id="separator" value="-" maxlength="4" />
+            </div>
+            <div class="control-group">
+              <label for="include-number">Include number</label>
+              <select id="include-number">
+                <option value="end" selected>At the end</option>
+                <option value="anywhere">Anywhere</option>
+                <option value="none">Don't include number</option>
+              </select>
+            </div>
+            <div class="control-group control-group-full">
+              <label>Template (click a slot to change its part of speech)</label>
+              <div id="template-spinners" class="template-spinners"></div>
+            </div>
+
+            <!-- Plural Nouns -->
+            <div class="control-group control-group-full">
+              <label for="noun-textarea">Plural Nouns (<span id="noun-count">0</span> words)</label>
+              <textarea id="noun-textarea" class="wordlist-textarea" spellcheck="false" placeholder="One word per line…"></textarea>
+              <div class="wordlist-actions">
+                <label class="btn btn-secondary" for="noun-file">Upload .txt</label>
+                <input type="file" id="noun-file" accept=".txt,.csv" hidden />
+                <button type="button" class="btn btn-secondary reset-pos-btn" data-pos="noun">Reset to Default</button>
+              </div>
+            </div>
+
+            <!-- Adjectives -->
+            <div class="control-group control-group-full">
+              <label for="adj-textarea">Adjectives (<span id="adj-count">0</span> words)</label>
+              <textarea id="adj-textarea" class="wordlist-textarea" spellcheck="false" placeholder="One word per line…"></textarea>
+              <div class="wordlist-actions">
+                <label class="btn btn-secondary" for="adj-file">Upload .txt</label>
+                <input type="file" id="adj-file" accept=".txt,.csv" hidden />
+                <button type="button" class="btn btn-secondary reset-pos-btn" data-pos="adj">Reset to Default</button>
+              </div>
+            </div>
+
+            <!-- Verbs -->
+            <div class="control-group control-group-full">
+              <label for="verb-textarea">Verbs (<span id="verb-count">0</span> words)</label>
+              <textarea id="verb-textarea" class="wordlist-textarea" spellcheck="false" placeholder="One word per line…"></textarea>
+              <div class="wordlist-actions">
+                <label class="btn btn-secondary" for="verb-file">Upload .txt</label>
+                <input type="file" id="verb-file" accept=".txt,.csv" hidden />
+                <button type="button" class="btn btn-secondary reset-pos-btn" data-pos="verb">Reset to Default</button>
+              </div>
+            </div>
+
+            <!-- Adverbs -->
+            <div class="control-group control-group-full">
+              <label for="adv-textarea">Adverbs (<span id="adv-count">0</span> words)</label>
+              <textarea id="adv-textarea" class="wordlist-textarea" spellcheck="false" placeholder="One word per line…"></textarea>
+              <div class="wordlist-actions">
+                <label class="btn btn-secondary" for="adv-file">Upload .txt</label>
+                <input type="file" id="adv-file" accept=".txt,.csv" hidden />
+                <button type="button" class="btn btn-secondary reset-pos-btn" data-pos="adv">Reset to Default</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="validation-msg"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Documentation Card -->
+    <div class="card doc-card" id="documentation">
+      <h2>What's Going On?</h2>
+      <p>Chomsky is a passphrase generator modeled on <a href="https://github.com/naptowncode/chaerea" rel="noopener noreferrer">Chaerea</a> with the same core principles:</p>
+      <ol>
+        <li>People will use the password that works for them. Obviously.</li>
+        <li>People remember words and phrases more easily than letters, numbers, and symbols. (see <a href="https://xkcd.com/936/">xkcd 936 - correct horse battery staple</a>)</li>
+        <li>People have a hard time choosing things "randomly". (see <a href="https://www.loper-os.org/bad-at-entropy/manmach.html">Bad at Entropy</a>)</li>
+      </ol>
+      <p>And it adds a another:</p>
+      <ol start="4">
+        <li>People will recognize (and remember) a phrase that is grammatically <a href="https://en.wikipedia.org/wiki/Well-formedness">well-formed</a>.</li>
+      </ol>
+      <p>This added principle is an unproven assumption. Regardless of how well it works, this approach certainly divides a main word list into smaller lists by part of speech, which requires a longer passphrase to reach the same level of security that Chaerea provides. Safety not guaranteed, your mileage may vary, etc.</p>
+    </div>
+
+    <!-- Another Documentation Card -->
+    <div class="card doc-card" id="documentation-2">
+      <h2>The Settings</h2>
+      <p>Default settings are meant to balance security with memorability.</p>
+      <ul>
+        <li><strong>Number of words</strong>: Default is 5, minimum 3, maximum 6. Longer is more secure but more likely to exceed a system's maximum password length.</li>
+        <li><strong>Separator</strong>: Default is "-", but can be any string up to 4 characters long.</li>
+        <li><strong>Include number</strong>: Default is "At the end". Satisfies password systems that require a number.</li>
+        <li><strong>Template</strong>: Default is "adjective adjective noun verb adverb". This should produce a grammatical result most of the time, though not all combinations will. All nouns are plural which should make them in agreement with all the verbs.</li>
+      </ul>
+      <p>Word lists are based on the "Short list" from <a href="https://github.com/naptowncode/chaerea" rel="noopener noreferrer">Chaerea</a>, which itself is based on the "3esl" list from the <a href="https://wordlist.aspell.net/12dicts-readme/">12dicts</a> project that makes lists of common English words by comparing multiple dictionaries. Part-of-speech sorting was done by comparing against a dump of the <a href="https://en.wiktionary.org/wiki/Wiktionary:Main_Page">Wiktionary</a> database. All lists have been filtered to remove a variety of words that could be problematic for one reason or another.</p>
+      <ul>
+        <li><strong>Plural Nouns</strong>: 8,689 core English nouns. Making nouns plural was a best-effort job and there may be mistakes.</li>
+        <li><strong>Adjectives</strong>: 3,746 core English adjectives.</li>
+        <li><strong>Verbs</strong>: 5,786 core English verbs.</li>
+        <li><strong>Adverbs</strong>: 926 core English adverbs.</li>
+      </ul>
+    </div>
+
+    <!-- Cassius Card -->
+    <div class="card doc-card" id="colorless">
+      <h2>Colorless what now??</h2>
+      <p>"<a href="https://en.wikipedia.org/wiki/Colorless_green_ideas_sleep_furiously">Colorless green ideas sleep furiously</a>," is a sentence by Noam Chomsky that demonstrates how humans can immediately recognize correct grammar even when the combination of words is meaningless. It appears in Chomsky's 1957 book <u>Syntactic Structures</u> which laid the foundation for much of modern linguistics and cognitive science. It also put a big dent in the radical behaviorism of B.F. Skinner and the idea that you can teach kids how to talk by beating them, good riddance to that.</p>
+      <p>So if your passphrase is nonsense, don't worry; Noam Chomsky knows what you mean.</p>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <a href="https://github.com/naptowncode/chomsky" rel="noopener noreferrer">Chomsky source</a>
+    </footer>
+
+  </div>
+
+  <!-- Scripts: word lists first, then app logic -->
+  <script src="words-noun.js"></script>
+  <script src="words-verb.js"></script>
+  <script src="words-adj.js"></script>
+  <script src="words-adv.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
